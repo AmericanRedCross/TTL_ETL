@@ -1,0 +1,12 @@
+//Settings.js is not part of the repository.  However, it should be deployed with the application and contain deployment-specific settings.
+//there is a settings.js.example file that should match the structure and properties of this file that IS checked in to the repo.
+var settings = {}
+
+settings.application = {};
+
+//application port settings
+settings.application.port = 3002;
+settings.application.ip = "localhost"; //If deploying on Amazon EC2 Ubuntu, comment out this line.
+
+
+module.exports = settings;

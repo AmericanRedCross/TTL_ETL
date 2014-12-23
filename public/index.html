@@ -1,0 +1,68 @@
+<!doctype html>
+
+<!-- ASSIGN OUR ANGULAR MODULE -->
+<html ng-app="guardDuty">
+<head>
+	<!-- META -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1"><!-- Optimize mobile viewport -->
+
+	<title>GuardDuty</title>
+
+	<!-- SCROLLS -->
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"><!-- load bootstrap -->
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+
+	<style>
+
+		.site-container{
+			text-align: center;
+			padding: 10px;
+		}
+
+	</style>
+
+	<!-- SPELLS -->
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script><!-- load angular -->
+
+	<script src="js/controllers/main.js"></script>
+	<script src="js/services/guardduty.js"></script>
+	<script src="js/core.js"></script>
+
+</head>
+<!-- SET THE CONTROLLER -->
+<body ng-controller="mainController">
+	<div class="container">
+
+		<!-- HEADER -->
+		<div class="jumbotron text-center">
+			<h1>SpatialDev Site Health <span class="label label-info">{{ sites.length }}</span></h1>
+		</div>
+
+		<!-- TODO LIST -->
+		<div id="sites-list" class="row">
+			<div class="col-sm-12">
+
+				<!-- LOOP OVER THE sites IN $scope.sites -->
+				<div ng-repeat="site in sites" class="col-sm-4 site-container">
+					<h3>{{ site.name }}</h3>
+					<h5>{{ site.url }}</h5>
+					<div>Time-to-load: {{ site.loadTime }}</div>
+
+					<div ng-repeat="img in site.images">
+						<img class="thumbnail" ng-src="{{ img }}"/>
+					</div>
+
+
+				</div>
+
+				<p class="text-center" ng-show="loading">
+					<span class="fa fa-spinner fa-spin fa-3x"></span>
+				</p>
+
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>
