@@ -53,7 +53,7 @@ app.use('/', routes);
 
 //Create web server
 http.createServer(app).listen(app.get('port'), app.get('ipaddr'), function () {
-  var startMessage = "GuardDuty Server listening";
+  var startMessage = "TTL ETL Server listening";
 
   if (app.get('ipaddr')) {
     startMessage += ' on IP:' + app.get('ipaddr') + ', ';
@@ -62,21 +62,3 @@ http.createServer(app).listen(app.get('port'), app.get('ipaddr'), function () {
   startMessage += ' on port ' + app.get('port');
   console.log(startMessage);
 });
-
-
-//var self = this;
-//
-////Dynamically load .js files from the root folder.
-//require("fs").readdirSync(__dirname).forEach(function (file) {
-//
-//  if (path.extname(file) === ".js" && file != "index.js") {
-//    try {
-//      var operation = require(__dirname + "/" + file);
-//      var page = new operation();
-//      if (page && page.run) page.run(self.MULTI());
-//    }
-//    catch (e) {
-//      console.log("Error loading page " + e)
-//    }
-//  }
-//})

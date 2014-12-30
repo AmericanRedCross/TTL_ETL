@@ -33,6 +33,10 @@
     "method-override": "^2.3.0",
     "multer": "^0.1.6",
     "path": "^0.4.9",
-    "serve-favicon": "^2.1.6"
+    "serve-favicon": "^2.1.6",
+    "pg": "4.1.0",
+    "shortid": "2.0.1",
+    "underscore-node" : "0.1.2",
+    "request": "2.51.0"
   }
 }
