@@ -26,24 +26,24 @@ PostGresHelper.prototype.dropCreateTable = function(tableName, survey, cb) {
   var self = this;
 
   //Given some incoming data, create/truncate a table and insert the data.
-  this.dropTable(tableName, function (err, result) {
+  this.truncateTable(tableName, function (err, result) {
 
-    ////Whether or not the table exists, we're done.
-    //var exists = false;
-    //
-    //if (err && err.message.indexOf("does not exist") > -1) {
-    //  //The table doesn't exist.
-    //  exists = false;
-    //}
-    ////Now create/insert into table.
-    //if (exists) {
-    //  //The table exists and was truncated.  Callback
-    //  cb();
-    //}
-    //else {
+    //Whether or not the table exists, we're done.
+    var exists = true;
+
+    if (err && err.message.indexOf("does not exist") > -1) {
+      //The table doesn't exist.
+      exists = false;
+    }
+    //Now create/insert into table.
+    if (exists) {
+      //The table exists and was truncated.  Callback
+      cb();
+    }
+    else {
       //The table doesn't exist.  Create it, then callback.
       self.createTable(tableName, survey, cb);
-    //}
+    }
   })
 }
 
