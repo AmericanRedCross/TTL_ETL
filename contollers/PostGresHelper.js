@@ -85,8 +85,7 @@ PostGresHelper.prototype.query = function(queryStr, cb) {
 
       //common.log("Ran Query: " + queryStr)
 
-      //cb((err || queryerr), (result && result.rows ? result.rows : result));
-      cb();
+      cb((err || queryerr), (result && result.rows ? result.rows : result));
 
     });
   });
@@ -212,6 +211,39 @@ PostGresHelper.prototype.insertRows = function(tableName, survey, cb) {
   _insertRows();
 
 }
+
+
+PostGresHelper.prototype.addGeomColumn = function(tableName, cb) {
+
+  var sql = "DO $$ \
+              BEGIN \
+                BEGIN \
+                  ALTER TABLE " + tableName + " ADD COLUMN geom geometry; \
+                    EXCEPTION \
+                      WHEN duplicate_column THEN RAISE NOTICE 'column geom already exists in " + tableName + ".'; \
+                END; \
+              END; \
+            $$";
+
+  //Send it in
+  this.query(sql, cb); //MULTI means to wait until all calls finish, and then proceed to next function in flow
+}
+
+
+/**
+ * Assumes that the geometry column of the table exists, and is called geom. Also assumes srid = 4326
+ * @param tableName - name of table to update
+ * @param cb - callback
+ */
+PostGresHelper.prototype.fillGeomColumn = function(tableName, cb) {
+
+  var sql = "UPDATE " + tableName +
+  " SET geom = CASE WHEN (trim(both ' ' from _geolocation) = ',' OR _geolocation IS NULL) THEN NULL ELSE ST_GeomFromText('POINT(' || split_part(_geolocation, ',', 2) || ' ' || split_part(_geolocation, ',', 1) || ')', 4326) END;";
+
+  //Send it in
+  this.query(sql, cb); //MULTI means to wait until all calls finish, and then proceed to next function in flow
+}
+
 
 
 /******************************************************************

@@ -75,6 +75,46 @@ ETL.prototype.run = flow.define(
     }
 
 
+  },
+  function(){
+    //Add geom columns and fill them, but only if _geolocation property exists for a given survey
+    var self = this;
+
+    for(var key in surveys.surveys) {
+      var survey = surveys.surveys[key];
+
+      if(survey.columns && survey.data) {
+
+        if (survey.columns.indexOf("_geolocation") > -1) {
+          pghelper.addGeomColumn(key, self.MULTI());
+        }
+
+      }
+      else{
+        common.log("Survey " + key + " doesn't have columns or data. Skipping adding geometry column.");
+      }
+    }
+
+  },
+  function(){
+    //Fill geom columns, but only if _geolocation property exists for a given survey
+    var self = this;
+
+    for(var key in surveys.surveys) {
+      var survey = surveys.surveys[key];
+
+      if(survey.columns && survey.data){
+
+        if(survey.columns.indexOf("_geolocation") > -1){
+            //Added Geom column. Fill it with geom data.
+            pghelper.fillGeomColumn(key, self.MULTI());
+        }
+
+      }
+      else{
+        common.log("Survey " + key + " doesn't have columns or data. Skipping filling geometry column.");
+      }
+    }
 
   },
   function(){
@@ -88,16 +128,5 @@ ETL.prototype.run = flow.define(
 );
 
 
-ETL.prototype.dropPGTable = function(tableName, cb){
-
-}
-
-ETL.prototype.createPGTable = function(tableName, cb){
-
-}
-
-ETL.prototype.insertPGData = function(data, cb){
-
-}
 
 module.exports = ETL;

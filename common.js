@@ -521,4 +521,28 @@ common.writeGeoJSONFile = function (geojson, name, callback) {
 
 }
 
+//Run a shell command, and return the output in the callback
+//Usage: run_cmd( "ls", ["-l"], function(text) { console.log (text) });
+common.run_cmd = function(cmd, args, callBack ) {
+    var spawn = require('child_process').exec;
+    var child = spawn(cmd, args);
+    var resp = "";
+    var err = "";
+
+    console.log("Running shell command: " + cmd + ", args: " + args)
+
+    child.stdout.on('data', function (buffer) {
+        resp += buffer.toString() ;
+    });
+    child.stdout.on('end', function() {
+        callBack (null, resp)
+    });
+
+    //child.stderr.on('data', function(buffer) { err += buffer.toString() });
+    //child.stderr.on('end', function() {
+    //    callBack (err, null)
+    //});
+
+}
+
 module.exports = common;

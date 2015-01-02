@@ -1,0 +1,38 @@
+/**
+ * Created by ryanwhitley on 12/31/14.
+ */
+
+var settings = require("../settings/settings.js"),
+common = require("../common.js"),
+flow = require("flow"),
+fs = require('fs'),
+zlib = require('zlib');
+
+var Backup = function() {
+
+}
+
+/**
+ *
+ * @param dbName - name of the postgres DB to backup (optional).
+ * @param cb - callback function.
+ */
+Backup.prototype.backupDB = function(cb, dbName) {
+
+  //If a dbname is passed in, try that one.  Otherwise, use the DB specified in settings.js
+  var database = dbName || settings.pg.database;
+
+  var outputFile = settings.pg.backup_directory + "/" + database + ".out";
+
+  common.run_cmd( "pg_dump -v " + database + " > " + outputFile, [], function(err, text) {
+
+    console.log(text);
+
+    if (cb) cb(err, text);
+
+  });
+
+
+}
+
+module.exports = Backup;

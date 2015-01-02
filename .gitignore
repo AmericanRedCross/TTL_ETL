@@ -1,2 +1,5 @@
 settings/*
 !settings/settings.js.example
+
+backups/*
+!backups/README.md
