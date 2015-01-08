@@ -9,7 +9,7 @@ fs = require('fs'),
 zlib = require('zlib');
 
 var Backup = function() {
-
+  //if(io) common.createSocketOutput(io); //Use the common socket output to common.log to.
 }
 
 /**

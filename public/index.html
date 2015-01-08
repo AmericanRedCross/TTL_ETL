@@ -1,17 +1,23 @@
 <!doctype html>
 
 <!-- ASSIGN OUR ANGULAR MODULE -->
-<html ng-app="guardDuty">
+<html ng-app="TTL_ETL_UI">
 <head>
 	<!-- META -->
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1"><!-- Optimize mobile viewport -->
 
-	<title>GuardDuty</title>
+	<title>TTL Survey Administrative UI</title>
 
 	<!-- SCROLLS -->
-	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"><!-- load bootstrap -->
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"><!-- load bootstrap -->
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/main.css">
+
+	<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
 	<style>
 
@@ -26,42 +32,128 @@
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script><!-- load angular -->
 
 	<script src="js/controllers/main.js"></script>
-	<script src="js/services/guardduty.js"></script>
+	<script src="js/services/surveys.js"></script>
+	<script src="js/services/stats.js"></script>
+	<script src="js/services/etl.js"></script>
+
 	<script src="js/core.js"></script>
 
 </head>
 <!-- SET THE CONTROLLER -->
 <body ng-controller="mainController">
-	<div class="container">
 
-		<!-- HEADER -->
-		<div class="jumbotron text-center">
-			<h1>SpatialDev Site Health <span class="label label-info">{{ sites.length }}</span></h1>
-		</div>
-
-		<!-- TODO LIST -->
-		<div id="sites-list" class="row">
-			<div class="col-sm-12">
-
-				<!-- LOOP OVER THE sites IN $scope.sites -->
-				<div ng-repeat="site in sites" class="col-sm-4 site-container">
-					<h3>{{ site.name }}</h3>
-					<h5>{{ site.url }}</h5>
-					<div>Time-to-load: {{ site.loadTime }}</div>
-
-					<div ng-repeat="img in site.images">
-						<img class="thumbnail" ng-src="{{ img }}"/>
-					</div>
-
-
+	<!-- Nav -->
+	<nav class="navbar navbar-default">
+		<div class="container">
+			<div class="container-fluid">
+				<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#"><img id="ARCLogo" src="images/arc_logo.png"/></a>
+					<a class="navbar-brand" href="#">TTL Surveys</a>
 				</div>
 
-				<p class="text-center" ng-show="loading">
-					<span class="fa fa-spinner fa-spin fa-3x"></span>
+				<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li class="active"><a href="#stats" data-toggle="tab">Status <span class="sr-only">(current)</span></a></li>
+						<li><a href="#reports" data-toggle="tab">Reports</a></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Actions <span class="caret"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li ng-click="runAll()"><a href="#">Run All (Sync,Backup,Ship)</a></li>
+								<li class="divider"></li>
+								<li ng-click="synchFormHubData()"><a href="#">Run FormHub Sync</a></li>
+								<li ng-click="backupDB()"><a href="#">Backup Database</a></li>
+								<li ng-click="sendToS3()"><a href="#">Send DB Backup to S3</a></li>
+
+							</ul>
+						</li>
+					</ul>
+				</div><!-- /.navbar-collapse -->
+			</div><!-- /.container-fluid -->
+		</div>
+	</nav>
+
+    <!-- container class is width restricted and centered -->
+	<div class="container">
+
+
+		<!-- content panes -->
+		<div class="tab-content">
+
+			<!-- Add different content panels here -->
+
+			<!-- Survey Panel (Default) -->
+			<div role="tabpanel" class="tab-pane active" id="stats">
+
+
+				<h3>Live FormHub Surveys</h3>
+				<div id="surveys-list" class="row">
+					<div class="col-sm-6">
+						<ul>
+							<!-- LOOP OVER THE sites IN $scope.surveys -->
+							<li ng-repeat="(key, value) in surveys">
+								{{ key }}
+							</li>
+						</ul>
+						<p class="text-center" ng-show="loading">
+							<span class="fa fa-spinner fa-spin fa-3x"></span>
+						</p>
+
+					</div>
+				</div>
+
+
+				<h3>FormHub Sync Status
+					<span ng-show="stats.etl.low" class="label label-success">Synched</span>
+					<span ng-show="stats.etl.medium" class="label label-warning">Getting old</span>
+					<span ng-show="stats.etl.high" class="label label-danger">Stale</span>
+					<span ng-show="hasETLRun == false" class="label label-info">Not run since server reset</span>
+				</h3>
+				<p class="section-details" ng-show="hasETLRun == true">
+					Last Synch: {{ dayDiff.days }} Days, {{ dayDiff.hours }} Hours, {{ dayDiff.minutes }} Minutes ago
+				</p>
+
+
+				<h3>Database Backup Status
+					<span ng-show="stats.latest.low" class="label label-success">Backed up</span>
+					<span ng-show="stats.latest.medium" class="label label-warning">Backup getting old</span>
+					<span ng-show="stats.latest.high" class="label label-danger">Stale backup</span>
+					<span ng-show="hasDBBackupRun == false" class="label label-info">Not backed up since server reset</span>
+				</h3>
+				<p class="section-details" ng-show="hasDBBackupRun == true">
+					Last Backup: {{ backupDayDiff.days }} Days, {{ backupDayDiff.hours }} Hours, {{ backupDayDiff.minutes }} Minutes ago
+				</p>
+
+				<h3>Database Shipped Status (S3)
+					<span ng-show="stats.latest.uploadToS3.low" class="label label-success">Recently shipped</span>
+					<span ng-show="stats.latest.uploadToS3.medium" class="label label-warning">Think about shipping again</span>
+					<span ng-show="stats.latest.uploadToS3.high" class="label label-danger">Needs to be shipped</span>
+					<span ng-show="hasS3BackupRun == false" class="label label-info">Not shipped up since server reset</span>
+				</h3>
+				<p class="section-details" ng-show="hasS3BackupRun == true">
+					Last Shipped: {{ s3DayDiff.days }} Days, {{ s3DayDiff.hours }} Hours, {{ s3DayDiff.minutes }} Minutes ago
 				</p>
 
 			</div>
+
+			<!-- Reports Panel -->
+			<div role="tabpanel" class="tab-pane" id="reports">
+				Reports Here
+			</div>
 		</div>
+
+
+
+
 	</div>
 
 </body>

@@ -9,6 +9,12 @@ var express = require('express'),
   flow = require('flow'),
   router = express.Router();
 
+
+//var Router = function(server) {
+//  this.router = router;
+//  this.io = require('./socket.js').listen(server);
+//}
+
 var ETL = require("../contollers/ETL.js");
 var etl = new ETL();
 
@@ -18,6 +24,7 @@ var s3 = new S3Uploader();
 var Backup = require("../contollers/Backup.js");
 var backup = new Backup();
 
+var _stats = {};  //Keep track of stats since service has been alive.
 
 router.all("/runall", flow.define(
 
@@ -121,5 +128,40 @@ router.all("/sendtos3", function(req, res){
   });
 
 })
+
+
+router.get('/surveys', function(req, res) {
+    var Survey = require("../contollers/Surveys.js");
+    var survey = new Survey();
+
+    survey.fetchFormHubFormList(function(err, list){
+        //Got List.
+
+        //Return it as JSON.
+        if(err){
+
+          res.end("Error getting list.");
+          return;
+        }
+
+        //End with JSON.
+        res.end(JSON.stringify(list, null, true));
+
+    });
+})
+
+router.get('/stats', function(req, res) {
+
+    //Get stats on latest backup
+    _stats.latest = s3.getStats();
+    _stats.etl = etl.getStats();
+
+    //End with JSON.
+    res.end(JSON.stringify(_stats, null, true));
+
+})
+
+
+
 
 module.exports = router;

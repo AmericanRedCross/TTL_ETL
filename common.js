@@ -178,6 +178,9 @@ common.executePgQuery = function (query, callback) {
 common.log = function (message) {
     //Write to console
     console.log(message);
+    //if(this.io){
+    //    this.io.emit('log', { for: 'everyone' });
+    //}
 }
 
 //Determine if a string contains all numbers.
@@ -487,6 +490,10 @@ common.executeRESTRequest = function (url, postargs, callback) {
                 callback(new Error("403 Error for path " + url), null);
                 return;
             }
+            else if(this.statusCode == 502) {
+                callback(new Error("502 Bad Gateway for " + url), null);
+                return;
+            }
             try{
                 var parsed = JSON.parse(body);
                 callback(null, parsed);
@@ -544,5 +551,11 @@ common.run_cmd = function(cmd, args, callBack ) {
     //});
 
 }
+
+
+common.createSocketOutput = function(io){
+    this.io = io;
+}
+
 
 module.exports = common;

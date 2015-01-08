@@ -14,8 +14,10 @@ var surveys = new Surveys();
 var PostGresHelper = require("./PostGresHelper.js");
 var pghelper = new PostGresHelper();
 
-var ETL = function() {
+var _stats = { surveys: []}; //Keep track of running stats
 
+var ETL = function() {
+  //if(io) common.createSocketOutput(io); //Use the common socket output to common.log to.
 }
 
 
@@ -23,7 +25,13 @@ ETL.prototype.run = flow.define(
 
   function(cb) {
 
+    //reset
+    _stats = { surveys: []};
+
     this.cb = cb;
+
+    //Tuck away the stats
+    _stats.start_time = (new Date()).toJSON();
 
     //Go get the surveys.  When we've finished, flow to the next function block
     surveys.fetchFormHubFormList(this);
@@ -50,7 +58,11 @@ ETL.prototype.run = flow.define(
     //Iterate over the hash, and drop/create tables
     for(var key in surveys.surveys) {
       var survey = surveys.surveys[key];
-      if(survey.columns && survey.data){
+
+      //Tuck away the list of surveys in the stats object in case client wants to see a log of most recent run.
+      _stats.surveys.push({ name: key, columns: survey.columns });
+
+      if(survey.columns && survey.data && key.indexOf("test") == -1){ //Don't use surveys with 'test' in the form name.
         pghelper.dropCreateTable(key, survey, this.MULTI());
       }
       else{
@@ -66,7 +78,7 @@ ETL.prototype.run = flow.define(
     for(var key in surveys.surveys) {
       var survey = surveys.surveys[key];
 
-      if(survey.columns && survey.data){
+      if(survey.columns && survey.data && key.indexOf("test") == -1){ //Don't use surveys with 'test' in the form name.
         pghelper.insertRows(key, survey, this.MULTI());
       }
       else{
@@ -83,7 +95,7 @@ ETL.prototype.run = flow.define(
     for(var key in surveys.surveys) {
       var survey = surveys.surveys[key];
 
-      if(survey.columns && survey.data) {
+      if(survey.columns && survey.data && key.indexOf("test") == -1){ //Don't use surveys with 'test' in the form name.
 
         if (survey.columns.indexOf("_geolocation") > -1) {
           pghelper.addGeomColumn(key, self.MULTI());
@@ -103,7 +115,7 @@ ETL.prototype.run = flow.define(
     for(var key in surveys.surveys) {
       var survey = surveys.surveys[key];
 
-      if(survey.columns && survey.data){
+      if(survey.columns && survey.data && key.indexOf("test") == -1){ //Don't use surveys with 'test' in the form name.
 
         if(survey.columns.indexOf("_geolocation") > -1){
             //Added Geom column. Fill it with geom data.
@@ -121,11 +133,18 @@ ETL.prototype.run = flow.define(
     //Done inserting data.
     common.log("Finished inserting data.");
 
+    //Tuck away the stats
+    _stats.end_time = (new Date()).toJSON();
+
     this.cb();
 
   }
 
 );
+
+ETL.prototype.getStats = function(){
+  return _stats;
+}
 
 
 

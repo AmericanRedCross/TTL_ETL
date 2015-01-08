@@ -13,6 +13,8 @@ flow = require("flow"),
 var AWS = require("./AWS.js")
 var aws = new AWS();
 
+var _stats = {};
+
 var S3Uploader = function() {
 
 }
@@ -23,7 +25,12 @@ S3Uploader.prototype.upload = function(filePath, cb) {
   //Go get the surveys.  When we've finished, flow to the next function block
   aws.uploadToS3(filePath, function(err, data){
 
-    cb("Done");
+    if(!err){
+      _stats.uploadToS3 = data;
+      _stats.lastUploaded = (new Date()).toJSON();
+    }
+
+    cb(err, data);
 
   });
 
@@ -62,6 +69,7 @@ S3Uploader.prototype.getLatestBackup = function(cb) {
   //Latest has only the file name
   //Add the full path.
   if(latest){
+    _stats.latestBackup = { time: fs.statSync(path.join(dir, latest)).ctime, file: latest };
     cb(null, path.join(dir, latest));
   }
   else{
@@ -70,6 +78,10 @@ S3Uploader.prototype.getLatestBackup = function(cb) {
 
 }
 
+//Send back stats object.
+S3Uploader.prototype.getStats = function() {
+  return _stats;
+}
 
 
 module.exports = S3Uploader;

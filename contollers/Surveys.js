@@ -10,7 +10,7 @@ flow = require("flow");
 var Surveys = function() {
   this.surveyList = [];
   this.surveys = {};
-
+  //if(io) common.createSocketOutput(io); //Use the common socket output to common.log to.
 }
 
 
@@ -69,7 +69,7 @@ Surveys.prototype.downloadAllData= function(cb) {
 
 Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
 
-  var path = path; //Split the incoming string, and only take the last 1/2 of the URL (i.e., /api/v1/data/foobar)
+  var path = path;
   var postargs = {
     Authorization: 'Token ' + settings.formhub.token
   };
@@ -80,7 +80,10 @@ Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
 
   common.executeRESTRequest(path, postargs, function (err, data) {
 
+    common.log("Fetched data for: " + formName);
+
     if (err) {
+      console.log(err)
       cb(null)
       return;
     }
