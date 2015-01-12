@@ -4,7 +4,9 @@
   "description": "An ETL to fetch datatables from FormHub API and insert them into a PostGreSQL Instance.",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "npm test",
+    "watch": "watchify -v -d public/js/core.js -o public/lib/ttl_client.js",
+    "build": "browserify -d public/js/core.js -o public/lib/ttl_client.js"
   },
   "repository": {
     "type": "git",
@@ -39,6 +41,8 @@
     "serve-favicon": "^2.1.6",
     "shortid": "2.0.1",
     "socket.io": "^1.2.1",
-    "underscore-node": "0.1.2"
+    "underscore-node": "0.1.2",
+    "browserify": "~5.9.1",
+    "watchify": "1.0.1"
   }
 }

@@ -1,7 +1,7 @@
 angular.module('ttlController', [])
 
 	// inject the  service factory into our controller
-	.controller('mainController', ['$scope','$http','Surveys', 'Stats', 'ETL', function($scope, $http, Surveys, Stats, ETL) {
+	.controller('mainController', ['$scope','$http','Surveys', 'Stats', 'ETL', 'Reports', function($scope, $http, Surveys, Stats, ETL, Reports) {
 
 		$scope.formData = {};
 		$scope.loading = true;
@@ -184,6 +184,48 @@ angular.module('ttlController', [])
 				});
 		}
 
+
+		/***
+		 *
+		 * Reports Section
+		 */
+
+		$scope.getReport = function(report_name){
+			//Store the selected report
+			$scope.reportName = report_name;
+
+			Reports.get(report_name).success(function(data) {
+				//Refresh stats, and go to home page.
+				$scope.refreshStats();
+
+				$scope.currentReport = data;
+
+				if(data && data.length > 0){
+					$scope.keys = Object.keys(data[0]); //Use this to iterate using ng-repeat.
+				}
+
+				//Hide spinner
+				$scope.loading = false;
+			});
+
+		}
+
+		//Fetch the list of reports defined in public/settings/reports.js
+		$scope.getReportList = function(){
+
+				$scope.reportList = Reports.getReportList();
+
+		}
+
+		$scope.getReportList();
+
+
+
+		$scope.downloadReportCSV = function(report_name){
+			Reports.getCSV(report_name).success(function(data) {
+				 //should have downloaded csv.
+			});
+		}
 
 
 		 function millisecondsToDays(t){

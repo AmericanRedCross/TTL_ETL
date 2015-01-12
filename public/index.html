@@ -31,12 +31,16 @@
 	<!-- SPELLS -->
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script><!-- load angular -->
 
-	<script src="js/controllers/main.js"></script>
-	<script src="js/services/surveys.js"></script>
-	<script src="js/services/stats.js"></script>
-	<script src="js/services/etl.js"></script>
+	<!--<script src="js/controllers/main.js"></script>-->
+	<!--<script src="js/services/surveys.js"></script>-->
+	<!--<script src="js/services/stats.js"></script>-->
+	<!--<script src="js/services/etl.js"></script>-->
+	<!--<script src="js/services/reports.js"></script>-->
 
-	<script src="js/core.js"></script>
+	<!--<script src="js/core.js"></script>-->
+
+	<script src="js/settings/reports.js"></script>
+	<script src="lib/ttl_client.js"></script>
 
 </head>
 <!-- SET THE CONTROLLER -->
@@ -147,7 +151,40 @@
 
 			<!-- Reports Panel -->
 			<div role="tabpanel" class="tab-pane" id="reports">
-				Reports Here
+
+				<div class="dropdown">
+					<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+						Choose a report
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+
+						<li ng-repeat="(key, val) in reportList" ng-click="getReport(key)" role="presentation"><a role="menuitem" tabindex="-1" href="#">{{ key }}</a></li>
+
+					</ul>
+				</div>
+
+				<a id="downloadCSV" ng-href="/reports/{{reportName}}/csv" ng-show="currentReport" type="button" class="btn btn-success" aria-expanded="false">
+					Export to CSV
+				</a>
+
+				<table id="reportTable" ng-show="currentReport" data-toggle="table" data-cache="false" data-height="299">
+					<thead>
+					<tr>
+						<th ng-repeat="column in keys">
+							{{column}}
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="row in currentReport">
+							<td ng-repeat="column in keys">
+								{{row[column]}}
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
 			</div>
 		</div>
 

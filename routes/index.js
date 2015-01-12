@@ -7,6 +7,7 @@
 var express = require('express'),
   path = require('path'),
   flow = require('flow'),
+  common = require('../common.js'),
   router = express.Router();
 
 
@@ -23,6 +24,12 @@ var s3 = new S3Uploader();
 
 var Backup = require("../contollers/Backup.js");
 var backup = new Backup();
+
+var Reporter = require("../contollers/Reporter.js");
+var reporter = new Reporter();
+
+//For grabbing report settings
+var report_settings = require("../public/js/settings/reports.js");
 
 var _stats = {};  //Keep track of stats since service has been alive.
 
@@ -161,6 +168,47 @@ router.get('/stats', function(req, res) {
 
 })
 
+
+router.get('/reports/:report_name', function(req, res) {
+
+  var report_name = req.params.report_name;
+  if(report_name) {
+    //Try to find the query from settings/reports.js
+    reporter.runReport(report_name, function (err, result) {
+
+      if (err) {
+        res.end(JSON.stringify(err, null, true));
+        return;
+      }
+
+
+      //End with JSON.
+      res.end(JSON.stringify(result, null, true));
+
+    })
+
+  }
+
+})
+
+
+//Using the report name, pull the csv from the scope hash and send it back as a csv.
+//Assumes that the runReport() method has fired, and that the result is stored in a hash.
+router.get('/reports/:report_name/csv', function(req, res) {
+
+  reporter.getReport(req.params.report_name, function(result){
+
+    var args = { format: 'csv' };
+    args.featureCollection = common.formatters.CSVFormatter(result);
+    args.name = req.params.report_name;
+
+    common.respond(req, res, args, function(){
+
+    })
+
+  });
+
+})
 
 
 

@@ -6,3 +6,15 @@
     height: 40px;
     margin-top: -10px;
 }
+
+#reportTable th, #reportTable td{
+    padding: 0 10px;
+}
+
+table#reportTable {
+    margin: 20px 0;
+}
+
+a#downloadCSV {
+    margin: 15px 0;
+}
