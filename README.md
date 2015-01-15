@@ -148,21 +148,23 @@ The results appear beneath the dropdown along with a button to download the resu
 
 To add/modify the pre-defined reports, see the file located at:
 
-    `public/js/settings/reports.js`
+    public/js/settings/reports.js
 
 Note: This file is referenced by both the server side Node.js process AND the client side Angular UI, but lives in the client side folder structure.
 
 
 ##Environment Setup for Development
 
-If you intend to develop/alter this application, note that the Angular.js UI component (located in /public folder) uses [watchify](https://github.com/substack/watchify) and browserify to monitor and compress the client side javascript (also lets you use the 'require' style of javascript references)
-Watchify and Browserify will be installed when `npm install` is run in the root folder.
+If you intend to develop/alter this application, note that the Angular.js UI component (located in /public folder) uses [watchify](https://github.com/substack/watchify) and browserify to monitor and compress the client side javascript (also lets you use the 'require' style of javascript references).
+Watchify and Browserify should be already installed when `npm install` is run in the root folder (if you followed the Quick Setup steps at the top of this document).
 
 To actually start watching for code changes to automatically trigger the browserify build, in terminal type:
 
-    `npm run-script watch`
+    npm run-script watch
 
-This will watch for .js file changes in the public folder and automatically build the output .javascript file: /public/lib/ttl_client.js
+This will watch for .js file changes in the public folder and automatically build the output .javascript file: /public/lib/ttl_client.js which is referenced by index.html.
+
+
 
 
 
