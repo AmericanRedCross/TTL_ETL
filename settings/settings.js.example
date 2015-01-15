@@ -5,8 +5,31 @@ var settings = {}
 settings.application = {};
 
 //application port settings
-settings.application.port = 3002;
+settings.application.port = 3004;
 settings.application.ip = "localhost"; //If deploying on Amazon EC2 Ubuntu, comment out this line.
 
+//Formhub settings
+settings.formhub = {
+  token: "yourformhubapitoken",
+  host: "http://formhub.redcross.org",
+  port: "80"
+};
+
+settings.pg = {
+  server: 'localhost',
+  port: '5432',
+  database: 'ttl',
+  user: 'postgres',
+  password: 'password here',
+  escapeStr: 'rw79', //this is an escape sequence used to escape postgres strings. No need to change this.
+  delimiter: ',', //The delimiter used when packing multiple values into a single postgres column - for example when dealing with photo attachments. photo paths are concatenated using this delmiter.
+  backup_directory: './backups', //Where do you want PostGres Backups to go?
+  backup_extensions: ['.out', '.sql', '.bak']
+}
+
+settings.s3 = {
+  bucket: 'nameofyourbucket'
+  //Amazon S3 Credentials are stored in ~/.aws/credentials (see: http://aws.amazon.com/sdk-for-node-js/)
+}
 
 module.exports = settings;
