@@ -9,8 +9,8 @@ This project is a Node.js application (The ETL) plus a lightweight Angular.js cl
 2. Database Backup - Uses Node.js to issue a shell command to back up PostGres DB.
 3. Ship Backup to S3 - Given S3 credentials and a directory of backups, the Node.js app will find the most recent backup, and send it to the S3 bucket.
 
-Screenshot of Angular UI
-<img src="docs/images/ui.png" width="600" height="400"/>
+Screenshot of Data loaded into QGIS
+<img src="docs/images/q.png" width="600" height="400"/>
 
 ##Quick(ish) Setup
 
@@ -121,6 +121,9 @@ It then zips this file and sends it to an Amazon S3 Bucket.
 
 
 ##Angular User Interface
+
+Screenshot of Angular UI
+<img src="docs/images/ui.png" width="600" height="400"/>
 
 In order to easily see the status of synced files, DB Backups and S3 shipments, a simple Angular.js UI was created.
 The UI also allows users to run predefined queries (reports), view them in the UI, and also download the output as a CSV.
