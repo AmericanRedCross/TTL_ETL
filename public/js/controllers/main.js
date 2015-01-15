@@ -9,11 +9,12 @@ angular.module('ttlController', [])
 		// GET =====================================================================
 		// when landing on the page, get all Surveys
 		// use the service to get all the surveys
-		Surveys.get()
-			.success(function(data) {
-				$scope.surveys = data;
-				$scope.loading = false;
-		});
+		//Don't get a live connection.  Use the list from the last ETL run.
+		//Surveys.get()
+		//	.success(function(data) {
+		//		$scope.surveys = data;
+		//		$scope.loading = false;
+		//});
 
 		// GET =====================================================================
 		// when landing on the page, get all Stats
@@ -27,6 +28,9 @@ angular.module('ttlController', [])
 					//See how long its been sine the last FormHub Synch.
 					if($scope.stats && $scope.stats.etl && $scope.stats.etl.start_time){
 						$scope.hasETLRun = true;
+
+						//set list of surveys in scope
+						$scope.surveys = $scope.stats.etl.surveys;
 
 						var msDiff = new Date().getTime() - new Date($scope.stats.etl.end_time).getTime(); //Difference in ms
 
@@ -111,6 +115,9 @@ angular.module('ttlController', [])
 					}
 
 				});
+
+			//Disable spinner.
+			$scope.loading = false;
 
 		}
 
@@ -210,7 +217,7 @@ angular.module('ttlController', [])
 
 		}
 
-		//Fetch the list of reports defined in public/settings/reports.js
+		//Fetch the list of reports defined in public/reports/reports.js
 		$scope.getReportList = function(){
 
 				$scope.reportList = Reports.getReportList();

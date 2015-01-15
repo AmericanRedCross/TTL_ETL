@@ -3,7 +3,7 @@ TTL_ETL
 
 A [FormHub](https://formhub.org/) -> PostGres ETL.
 
-This project is a Node.js application (The ETL) plus a lightweight Angular.js client app that controlls the 3 main compoents of the ETL:
+This project is a Node.js application (The ETL) plus a lightweight Angular.js client app that controls the 3 main compoents of the ETL:
 
 1. FormHub Sync - Using a FormHub API Token, connects to RedCross Formhub instance, reads all forms, and downloads all data.  Truncates/Creates PostGres tables and inserts data in a flattened way.
 2. Database Backup - Uses Node.js to issue a shell command to back up PostGres DB.
@@ -44,14 +44,14 @@ The 3 main components of the ETL are described in the sections below:
 2. [DB Backup](#DBBackup)
 3. [Ship DB to S3](#ShipToS3)
 
-####API Endpoint
+####TTL API Endpoint
 To run all 3 sequentailly:
 
     http://localhost:3004/runall
 
 ###<a name="FormHubSync"></a>FormHubSync
 
-API Endpoint to run this individual component:
+TTL API Endpoint to run this individual component:
 
     http://localhost:3004/etl
 
@@ -63,35 +63,37 @@ This part of the ETL is where most of the work happens.  This piece consists of 
 
 2. For each form listed by this endpoint, download the dataset from formhub:
 
-    Hits the endpoint: `http://formhub.redcross.org/api/v1/data/arc_ttl/140`
+    Hits the endpoint (for example): `http://formhub.redcross.org/api/v1/data/arc_ttl/140`
 
-3. Interestingly, each 'row' returned for a given dataset may have different properties.  In order to flatten this out and prepare to insert into a database table, we need to iterate over every row and find all unique rows, and add to a single list.
+3. Interestingly, each 'row' returned for a given dataset may have different properties/column names.  In order to flatten this out and prepare to insert into a database table, we need to iterate over every row and find all unique rows, and add to a single list.
    Also, the formhub column/property names contain forward slashes "/", which tends to mess stuff up.  So, while we're grabbing all of the unique column names, we 'clean them up' by running each name thru a function:
 
-   common.formatFormHubColumnName
+   `common.formatFormHubColumnName()`
 
    As we found out after starting to do this, simply keeping the last portion of the column name after the last forward slash resulted in duplicate column names.
    For this reason, we decided to take the last 2 sections separated by forward slashes and concatenate them. This has (so far) resulted in uniquely named columns.
 
 4. Next, each survey/form currently in memory is looped over.  For surveys that have columns AND also have data AND don't have the word 'test' in the name, we check to see if a PostGres table exists.
    Note: not every survey that is pulled necessarily has any rows. We skip these.
-   We do this by trying to `TRUNCATE` the table in psql.  If an error is returned, it is assumed that the table doesn't exist.  When this happens, a new table is created automatically.
+   We check for existence by trying to `TRUNCATE` (drop all of the rows in) the table in psql.  If an error is returned, it is assumed that the table doesn't exist.  When this happens, a new table is created automatically.
 
 5. Next, we iterate over all of the surveys (again) and try to insert each row in memory into the correct table in the DB.
 
 6. Now that tables are added and data is inserted, we iterate again and check to see if a particular survey/form has a _geolocation property.  If so, we `ALTER TABLE` and add a geometry column, SRID is 4326.
 
 7. We then attempt to add the X,Y coordinates as a geometry in the DB.
-   Note: just because a survey has the _geolocation property doesn't mean it has locations.  Often, the property has null values.
+   Note: just because a survey has the _geolocation property doesn't mean it has proper values.  Often, the property has null values.
 
 
-### Note: Occasionally, the API will choke and return a 502 error, which may result in a misfire of the ETL.  Running it again usually does the trick.
+### Note:
+
+*Occasionally, the FormHub API will choke and return a 502 error, which may result in a misfire of the ETL.  Running it again usually does the trick.*
 
 
 
 ###<a name="DBBackup"></a>DBBackup
 
-API Endpoint to run this individual component:
+TTL API Endpoint to run this individual component:
 
     http://localhost:3004/backup
 
@@ -99,7 +101,7 @@ This component backs up the postgres database defined in settings/settings.js.
 The backup file is placed in the /backups folder.
 On Linux, we'll schedule this as a nightly job using crontab.
 
-Basically, the single step for this process is to issue a shell command:
+Basically, the single step for this process issues a shell command:
 
     pg_dump -v ttl backups/ttl.out
 
@@ -109,7 +111,7 @@ This uses pg_dump with the verbose option to back up the ttl database and write 
 
 ###<a name="ShipToS3"></a>ShipToS3
 
-API Endpoint to run this individual component:
+TTL API Endpoint to run this individual component:
 
     http://localhost:3004/sendtos3
 
@@ -143,5 +145,25 @@ It also displays the last time each of the 3 main components was run. If any of 
 
 The reports panel offers a simple UI to select a pre-designated report to run.
 The results appear beneath the dropdown along with a button to download the results to .CSV.
+
+To add/modify the pre-defined reports, see the file located at:
+
+    `public/js/settings/reports.js`
+
+Note: This file is referenced by both the server side Node.js process AND the client side Angular UI, but lives in the client side folder structure.
+
+
+##Environment Setup for Development
+
+If you intend to develop/alter this application, note that the Angular.js UI component (located in /public folder) uses [watchify](https://github.com/substack/watchify) and browserify to monitor and compress the client side javascript (also lets you use the 'require' style of javascript references)
+Watchify and Browserify will be installed when `npm install` is run in the root folder.
+
+To actually start watching for code changes to automatically trigger the browserify build, in terminal type:
+
+    `npm run-script watch`
+
+This will watch for .js file changes in the public folder and automatically build the output .javascript file: /public/lib/ttl_client.js
+
+
 
 

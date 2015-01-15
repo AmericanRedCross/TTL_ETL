@@ -29,7 +29,7 @@ var Reporter = require("../contollers/Reporter.js");
 var reporter = new Reporter();
 
 //For grabbing report settings
-var report_settings = require("../public/js/settings/reports.js");
+var report_settings = require("../public/js/reports/reports.js");
 
 var _stats = {};  //Keep track of stats since service has been alive.
 
@@ -173,7 +173,7 @@ router.get('/reports/:report_name', function(req, res) {
 
   var report_name = req.params.report_name;
   if(report_name) {
-    //Try to find the query from settings/reports.js
+    //Try to find the query from reports/reports.js
     reporter.runReport(report_name, function (err, result) {
 
       if (err) {

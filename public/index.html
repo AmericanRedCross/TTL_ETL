@@ -38,7 +38,7 @@
 
 	<!--<script src="js/core.js"></script>-->
 
-	<script src="js/settings/reports.js"></script>
+	<script src="js/reports/reports.js"></script>
 	<script src="lib/ttl_client.js"></script>
 
 </head>
@@ -97,21 +97,29 @@
 			<!-- Survey Panel (Default) -->
 			<div role="tabpanel" class="tab-pane active" id="stats">
 
+				<p class="text-center" ng-show="loading">
+					<span class="fa fa-spinner fa-spin fa-3x"></span>
+				</p>
 
-				<h3>Live FormHub Surveys</h3>
-				<div id="surveys-list" class="row">
+				<h3>Loaded FormHub Surveys</h3>
+				<div id="surveys-list" class="row" ng-show="hasETLRun == true">
 					<div class="col-sm-6">
 						<ul>
 							<!-- LOOP OVER THE sites IN $scope.surveys -->
 							<li ng-repeat="(key, value) in surveys">
-								{{ key }}
+								{{ value.name }}
+								<strong ng-show="value.columns.length == 0">(No Columns/Data)</strong>
 							</li>
 						</ul>
-						<p class="text-center" ng-show="loading">
-							<span class="fa fa-spinner fa-spin fa-3x"></span>
-						</p>
-
 					</div>
+				</div>
+				<div ng-show="hasETLRun == false">
+					<span>
+						No surveys loaded since server was started.
+						<br>
+						<br>
+						<span ng-click="runAll()"><a href="#">Run All Now (Sync,Backup,Ship)</a></span>
+					</span>
 				</div>
 
 

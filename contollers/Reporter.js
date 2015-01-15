@@ -4,7 +4,7 @@
 
 var settings = require("../settings/settings.js"),
   common = require("../common.js"),
-  reports = require("../public/js/settings/reports.js"),
+  reports = require("../public/js/reports/reports.js"),
   flow = require("flow"),
   fs = require('fs');
 
