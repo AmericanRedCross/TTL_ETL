@@ -21,7 +21,7 @@ var path = require("path"),
   errorHandler = require('errorhandler');
 
 // all environments
-app.set('ipaddr', "localhost");
+app.set('ipaddr', settings.application.ip);
 app.set('port', process.env.PORT || settings.application.port);
 if (process.env.PORT) {
   settings.application.port = process.env.PORT;
