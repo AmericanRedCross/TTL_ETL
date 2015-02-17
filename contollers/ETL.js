@@ -55,7 +55,7 @@ ETL.prototype.run = flow.define(
 
     //Should have all the forms and data now.
 
-    //Iterate over the hash, and drop/create tables
+    //Iterate over the dictionary, and drop/create tables
     for(var key in surveys.surveys) {
       var survey = surveys.surveys[key];
 

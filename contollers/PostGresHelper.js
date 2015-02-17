@@ -25,26 +25,35 @@ PostGresHelper.prototype.dropCreateTable = function(tableName, survey, cb) {
 
   var self = this;
 
-  //Given some incoming data, create/truncate a table and insert the data.
-  this.truncateTable(tableName, function (err, result) {
+  //Given some incoming data, create a table and insert/update the data.
+  //Lower-case the table name.
+  this.checkIfTableExists(tableName.toLowerCase(), function (err, result) {
 
-    //Whether or not the table exists, we're done.
     var exists = true;
 
-    if (err && err.message.indexOf("does not exist") > -1) {
-      //The table doesn't exist.
-      exists = false;
+    //Whether or not the table exists
+    if(result && result.length > 0 && result[0].exists == true){
+      exists = true;
+      survey.exists = true; //Keep track of this, so when inserting rows we know whether to check for IDs or just insert all rows
     }
+    else{
+      exists = false;
+      survey.exists = false; //Keep track of this, so when inserting rows we know whether to check for IDs or just insert all rows
+    }
+
     //Now create/insert into table.
     if (exists) {
-      //The table exists and was truncated.  Callback
-      cb();
+      //The table exists.  Check the columns against the incoming columns to see if any new properties were added
+      self.addNewColumnsIfNecessary(tableName,survey, function(){
+        cb();
+      });
     }
     else {
       //The table doesn't exist.  Create it, then callback.
       self.createTable(tableName, survey, cb);
     }
   })
+
 }
 
 PostGresHelper.prototype.truncateTable = function(tableName, cb) {
@@ -53,6 +62,102 @@ PostGresHelper.prototype.truncateTable = function(tableName, cb) {
   var sql = "TRUNCATE TABLE " + tableName + ";";
   this.query(sql, function (err, result) {
     cb(err, result);
+  });
+
+}
+
+
+PostGresHelper.prototype.checkIfTableExists = function(tableName, cb) {
+
+  //see if a table exists - ASSUMES public schema
+  var sql = "SELECT EXISTS (SELECT 1 " +
+  "FROM   pg_catalog.pg_class c " +
+  "JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace " +
+  "WHERE  n.nspname = 'public' " +
+  "AND    c.relname = '" + tableName + "' " +
+  "AND    c.relkind = 'r'"+
+  ");";
+
+  this.query(sql, function (err, result) {
+    cb(err, result);
+  });
+
+}
+
+PostGresHelper.prototype.getExistingTableColumns = function(tableName, cb) {
+
+  //get column names - ASSUMES public schema
+  var sql = "SELECT attname " +
+  "FROM   pg_attribute " +
+  "WHERE  attrelid = 'public." + tableName + "'::regclass " +
+  "AND    attnum > 0 " +
+  "AND    NOT attisdropped " +
+  "ORDER  BY attnum;";
+
+  this.query(sql, function (err, result) {
+    cb(err, result);
+  });
+
+}
+
+PostGresHelper.prototype.addNewColumnsIfNecessary = function(tableName, survey, cb) {
+
+  var self = this;
+
+  var _checkColumns = flow.define(
+    function (dbColumns) {
+
+      if(survey.columns) {
+        var updateColumns = false;
+
+        survey.columns.forEach(function (incomingColumn) {
+          if (dbColumns.indexOf(incomingColumn) == -1) {
+            //Not found in the DB Column list.  Assume it is a new column.
+            updateColumns = true;
+            self.addColumnToTable(tableName, incomingColumn, 'text', this.MULTI());
+          }
+        }, this)
+
+        //If all columns are cool, then exit
+        if(updateColumns === false){
+          if(cb) cb(null, null);
+          return;
+        }
+
+      }
+      else{
+        //No columns on survey.  Exit.
+        if(cb) cb(null, null);
+        return;
+      }
+
+
+    },
+    function() {
+
+      //All columns added for this table.
+      //fire callback
+      if(cb) cb(null, null);
+
+    });
+
+
+  //Get the columns from the DB.
+  this.getExistingTableColumns(tableName, function(err, columns){
+
+    if(err){ //exit and return;
+      if(cb) cb(null, null);
+      return;
+    }
+
+    //Covert the array of objects into an array of column names (strings)
+    var columnArray = columns.map(function(row){
+        return row.attname;
+    });
+
+    //with the columns in the DB, compare to the survey.columns property to see if there are any new ones.
+    _checkColumns(columnArray);
+
   });
 
 }
@@ -107,9 +212,9 @@ PostGresHelper.prototype.query = function(queryStr, cb) {
 PostGresHelper.prototype.createTable = function (tableName, survey, cb) {
 
   //TODO: Get rid of this workaround.
-  var lowerList = {}; //a lowercase list of field names coming back from salesforce.
+  var lowerList = {}; //a lowercase list of field names coming back from formhub.
 
-  var sql = "CREATE TABLE " + tableName + "( ID  SERIAL PRIMARY KEY, ";
+  var sql = "CREATE TABLE " + tableName.toLowerCase() + "( ID  SERIAL PRIMARY KEY, ";
   survey.columns.forEach(function(field){
 
 
@@ -151,6 +256,7 @@ PostGresHelper.prototype.createTable = function (tableName, survey, cb) {
  * This is to be called inside of function insertRows only.
  * To know when it's done, wrap in a multiplexing flow
  * Survey object should have a 'fields' and 'data' property.
+ * Addition - don't insert row if survey exists in DB already and _uuid is already in place.
  * @param rows
  * @private
  */
@@ -161,11 +267,23 @@ PostGresHelper.prototype.insertRows = function(tableName, survey, cb) {
   var _insertRows = flow.define(
     function () {
 
-      if(survey.data.length == 0) cb();
+      if(survey.data.length == 0) cb(); //Exit if no data exists for this survey
 
       survey.data.forEach(function (row) {
+
+        //Get the _uuid of the record (ALL FormHub surveys (so far) have this field)
+        var _uuid = row['_uuid'];
+
         var insertStr = "INSERT INTO " + tableName + " ( ";
         var valStr = "VALUES ( ";
+
+        //If no _uuid, then treat it as a normal record - INSERT IT
+        if(survey && survey.exists && survey.exists === true && _uuid) {
+          //if survey exists, and we want to only insert rows if _uuid doesn't exist, then the form of the SQL expression will change.
+          //It should look like INSERT INTO <table> (<column name>, <column name>) SELECT <value 1>,<value 2>) WHERE NOT EXISTS (SELECT _uuid from <table> where _uuid = <uuid of row to be inserted>);
+          //The main difference there being the 'SELECT' instead of 'VALUES', and this SELECT list is not surounded by parenthesis ()
+          var valStr = "SELECT ";
+        }
 
         var insertFieldArray = [];
         var insertValueArray = [];
@@ -193,8 +311,19 @@ PostGresHelper.prototype.insertRows = function(tableName, survey, cb) {
         }
 
         insertStr += insertFieldArray.join(",") + ') ';
-        valStr += insertValueArray.join(",") + ');';
+        valStr += insertValueArray.join(","); //Decide whether or not to add the closing parenthesis below.  If checking _uuid, then no parenthesis.  Otherwise, yes.
         var sql = insertStr.toLowerCase() + valStr;
+
+        //New addition - if survey already exists in DB, then add a check to NOT insert rows if _uuid exists already.
+        //Only if there is a _uuid for this record.  Otherwise, just INSERT IT.
+        if(survey && survey.exists && survey.exists === true && _uuid){
+          sql += (" WHERE NOT EXISTS (SELECT _uuid from {{table}} where _uuid = '{{uuid}}')").replace('{{table}}', tableName).replace('{{uuid}}', _uuid);
+        }else{
+          sql += ")"; //Value string ends with a parenthesis ONLY when we're INSERTing a new row WITHOUT the _uuid check.
+        }
+
+        //Add ending semicolon
+        sql += ";";
 
         self.query(sql, this.MULTI()); //MULTI means to wait until all calls finish, and then proceed to next function in flow
 
@@ -213,6 +342,29 @@ PostGresHelper.prototype.insertRows = function(tableName, survey, cb) {
 }
 
 
+PostGresHelper.prototype.addColumnToTable = function(tableName, column, dataType, cb){
+
+  var sql = "DO $$ \
+              BEGIN \
+                BEGIN \
+                  ALTER TABLE " + tableName + " ADD COLUMN " + column + " " + dataType + "; \
+                    EXCEPTION \
+                      WHEN duplicate_column THEN RAISE NOTICE 'column " + column + " already exists in " + tableName + ".'; \
+                END; \
+              END; \
+            $$";
+
+  //Send it in
+  this.query(sql, function() {
+    //Added column to table (or tried anyway)
+    console.log("Added column " + column + " to " + tableName);
+    cb();
+  });
+
+}
+
+
+
 PostGresHelper.prototype.addGeomColumn = function(tableName, cb) {
 
   var sql = "DO $$ \
@@ -226,7 +378,7 @@ PostGresHelper.prototype.addGeomColumn = function(tableName, cb) {
             $$";
 
   //Send it in
-  this.query(sql, cb); //MULTI means to wait until all calls finish, and then proceed to next function in flow
+  this.query(sql, cb);
 }
 
 
