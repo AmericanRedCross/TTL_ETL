@@ -30,6 +30,7 @@ app.set('views', 'views');
 app.set('view engine', 'jade');
 app.set('trust proxy', true);
 app.enable("jsonp callback"); //TODO: Remove this if not needed because of CORS
+app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon_rc.jpg')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(multer());

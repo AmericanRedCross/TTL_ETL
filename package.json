@@ -27,6 +27,7 @@
   "dependencies": {
     "aws-sdk": "2.1.4",
     "body-parser": "^1.9.2",
+    "browserify": "~5.9.1",
     "cors": "^2.5.2",
     "errorhandler": "^1.2.2",
     "express": "^4.10.2",
@@ -34,6 +35,7 @@
     "fs": "0.0.2",
     "jade": "^1.7.0",
     "method-override": "^2.3.0",
+    "moment": "^2.9.0",
     "multer": "^0.1.6",
     "path": "^0.4.9",
     "pg": "4.1.0",
@@ -42,7 +44,6 @@
     "shortid": "2.0.1",
     "socket.io": "^1.2.1",
     "underscore-node": "0.1.2",
-    "browserify": "~5.9.1",
     "watchify": "1.0.1"
   }
 }

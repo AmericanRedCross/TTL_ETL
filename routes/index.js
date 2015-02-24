@@ -105,7 +105,12 @@ router.all("/backup", function(req, res){
 
    //Do a backup of the PostGres DB.
   backup.backupDB(function(err, result){
-    res.send('Backed up DB.');
+    console.log("finished backup");
+    //Use the S3 function to find the date of the latest backup (also updates stats)
+    s3.getLatestBackup(function(){
+       //done
+      res.send('Backed up DB.');
+    })
   });
 
   //Also, do any cleanup of older files.

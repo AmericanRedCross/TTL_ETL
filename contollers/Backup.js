@@ -6,7 +6,8 @@ var settings = require("../settings/settings.js"),
 common = require("../common.js"),
 flow = require("flow"),
 fs = require('fs'),
-zlib = require('zlib');
+zlib = require('zlib'),
+moment = require("moment");
 
 var Backup = function() {
   //if(io) common.createSocketOutput(io); //Use the common socket output to common.log to.
@@ -22,7 +23,9 @@ Backup.prototype.backupDB = function(cb, dbName) {
   //If a dbname is passed in, try that one.  Otherwise, use the DB specified in settings.js
   var database = dbName || settings.pg.database;
 
-  var outputFile = settings.pg.backup_directory + "/" + database + ".out";
+  var timestamp = moment().format('YYYY-MM-DDHHmmss');
+
+  var outputFile = settings.pg.backup_directory + "/" + database + timestamp + ".out";
 
   common.run_cmd( "pg_dump -v " + database + " > " + outputFile, [], function(err, text) {
 
@@ -31,7 +34,6 @@ Backup.prototype.backupDB = function(cb, dbName) {
     if (cb) cb(err, text);
 
   });
-
 
 }
 
