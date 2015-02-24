@@ -27,7 +27,7 @@ Backup.prototype.backupDB = function(cb, dbName) {
 
   var outputFile = settings.pg.backup_directory + "/" + database + timestamp + ".out";
 
-  common.run_cmd( "pg_dump -v " + database + " > " + outputFile, [], function(err, text) {
+  common.run_cmd( "pg_dump -O -v " + database + " > " + outputFile, [], function(err, text) {
 
     console.log(text);
 
