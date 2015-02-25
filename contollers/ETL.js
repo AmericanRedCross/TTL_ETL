@@ -89,7 +89,7 @@ ETL.prototype.run = flow.define(
 
   },
   function(){
-    //Add geom columns and fill them, but only if _geolocation property exists for a given survey
+    //Add geom columns, but only if _geolocation property exists for a given survey
     var self = this;
 
     for(var key in surveys.surveys) {
