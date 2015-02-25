@@ -7,12 +7,13 @@ settings = require("../settings/settings.js"),
 common = require("../common.js"),
 flow = require("flow"),
 fs = require('fs'),
-zlib = require('zlib');
+zlib = require('zlib'),
+  path = require('path');
 
 var AWS = function() {
 
   // PostGIS Connection String
-  this.params = {Bucket: settings.s3.bucket, Key: 'ARC'};
+  this.params = {Bucket: settings.s3.bucket, Key: 'ARC'}; //Key is the filename.  To be reset when uploading in 'uploadToS3' function.
   this.s3 = new services.S3();
 
 
@@ -23,7 +24,10 @@ var AWS = function() {
 AWS.prototype.uploadToS3 = function(filePath, cb) {
 
   var body = fs.createReadStream(filePath).pipe(zlib.createGzip());
-  this.s3.upload({Body: body, Bucket: this.params.Bucket, Key: this.params.Key}).
+
+  var key = path.basename(filePath);
+
+  this.s3.upload({Body: body, Bucket: this.params.Bucket, Key: key}).
     on('httpUploadProgress', function(evt) {
       console.log(evt);
     }).
