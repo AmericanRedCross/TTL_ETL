@@ -21,7 +21,7 @@ Screenshot of Data loaded into QGIS
 5. Add your Postgres settings in settings.js (you need to create an empty DB in PostGres that has the PostGIS Extension)
 6. run `npm install` (use sudo if necessary) in the root folder to install all of the dependencies
 7. Add your Amazon Web Service Credentials: Create a credentials file at ~/.aws/credentials on Mac/Linux or C:\Users\USERNAME\.aws\credentials on Windows
-8. Inside of the file from #6, add
+8. Inside of the file from #7, add
 
     aws_access_key_id = your_access_key
 
