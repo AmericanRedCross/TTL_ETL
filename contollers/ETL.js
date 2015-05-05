@@ -38,10 +38,17 @@ ETL.prototype.run = flow.define(
 
   },
   function(err, data) {
+    //For each survey, pull down the metadata (columns, data types and multiple choice options, etc.)
+    surveys.downloadFormMetadata(this);
+  },
+  function(err, data) {
 
     //For each survey, pull down the data
     surveys.downloadAllData(this);
 
+  },
+  function() {
+    surveys.addColumnNamesFromMetadata(this);
   },
 
   function() {
