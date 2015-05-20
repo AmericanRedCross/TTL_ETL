@@ -210,8 +210,9 @@ common.escapePostGresColumns = function (item) {
     //});
 }
 
+// Look up the data types from the metadata and map them to postgres data types.
 common.mapFormHubTypes2PostgresTypes = function (field) {
-    var map = {note:'text',numeric:'float',integer:'bigint', calculate:'text'};
+    var map = {note:'text',numeric:'float',integer:'bigint', calculate:'double precision', multi:'integer'};
     if (field.name == "meta_instanceid")
         return "text";
     if(map.hasOwnProperty(field.type)) {

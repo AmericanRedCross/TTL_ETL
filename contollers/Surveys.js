@@ -145,27 +145,29 @@ Surveys.prototype.addColumnNamesFromMetadata = function(cb){
 
             var columns = [];
             var multichoice = [];
-            columns = recursiveChildren(survey.metadata.children, columns, "base");
+            // Last two columns are for "base class" and "is multiple choice"
+            columns = recursiveChildren(survey.metadata.children, columns, "base", false);
             survey.metacolumns = columns;
             survey.multichoice = multichoice;
         }
     }
     // recursive function to loop through the children of each parent node.  Add column name and type to the columns array.
     // append the parent node to the name from the child element (as was originally done by Ryan's common.formatFormHubColumnName() function
-    function recursiveChildren(node, columns, parent) {
+    function recursiveChildren(node, columns, parent, multi) {
         node.forEach(function (d) {
             if (d.hasOwnProperty('children') && d.children[0].name != "yes") {
                 // Check to see if this is a multiple choice question.  If it is, add it to our multichoice array.
                 if (d.type == "select one" || d.type == "select all that apply") {
                     multichoice.push((parent != "base" ? parent+"/" : "")+d.name);
-                    recursiveChildren(d.children, columns, parent+"_"+d.name);
+                    recursiveChildren(d.children, columns, parent+"_"+d.name, true);
                 } else {
-                    recursiveChildren(d.children, columns, d.name);
+                    recursiveChildren(d.children, columns, d.name, false);
                 }
             } else {
                 // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
                 // Append 'mc' in this case so that we know it is from the multiple choice option.
                 d.name = (d.name == "other" ? d.name+"_mc" : d.name);
+                d.type = (multi ? "multi" : d.type);
                 columns.push({
                     'name': (parent + "_" + d.name).toLowerCase(),
                     'type': (d.type == undefined ? "text" : d.type)
@@ -205,16 +207,28 @@ Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
     if (!self.surveys[formName]) {
       self.surveys[formName] = {};
     }
+      var newname = null;
     // compare the data coming in with the multiple choice array.  If it is a question with multiple options for response remove the base field (question) and add fields for each response option.
     for(var prop1 in data) {
         for(var key in data[prop1]) {
             for (var prop2 in self.surveys[formName].multichoice) {
                 if (key == self.surveys[formName].multichoice[prop2]) {
-                    // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
-                    // Append 'mc' in this case so that we know it is from the multiple choice option.
-                    var newname = key + "_" + data[prop1][key] + (data[prop1][key] == "other" ? "_mc" : "");
-                    data[prop1][newname] = 1;
-                    delete data[prop1][key];
+                    // Check to see if we have multiple answer in the same line (multiple choice responses will be delimited with a space
+                    if (data[prop1][key].indexOf(" ") != -1) {
+                        var multi = data[prop1][key].split(" ");
+                        for(var ele in multi) {
+                            // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
+                            // Append 'mc' in this case so that we know it is from the multiple choice option.
+                            newname = key + "_" + multi[ele] + (multi[ele] == "other" ? "_mc" : "");
+                            data[prop1][newname] = 1;
+                            delete data[prop1][key];
+                        }
+                    } else {
+                        newname = key + "_" + data[prop1][key] + (data[prop1][key] == "other" ? "_mc" : "");
+                        data[prop1][newname] = 1;
+                        delete data[prop1][key];
+                    }
+
                 }
             }
         }
