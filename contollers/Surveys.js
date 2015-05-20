@@ -30,6 +30,11 @@ Surveys.prototype.fetchFormHubFormList = function(cb) {
       cb(err, null)
       return;
     }
+      // only give me two tables back for now.
+    var tmp = {};
+      tmp.Abc = data.Abc;
+      tmp.Core_Shelter_Validation_Tool = data.Core_Shelter_Validation_Tool;
+    data = tmp;
 
     self.surveyList = data;
     cb(null, data);
@@ -139,18 +144,33 @@ Surveys.prototype.addColumnNamesFromMetadata = function(cb){
         if (survey && survey.metadata) {
 
             var columns = [];
-            columns = recursiveChildren(survey.metadata.children, columns, "survey");
+            var multichoice = [];
+            columns = recursiveChildren(survey.metadata.children, columns, "base");
             survey.metacolumns = columns;
+            survey.multichoice = multichoice;
         }
     }
     // recursive function to loop through the children of each parent node.  Add column name and type to the columns array.
     // append the parent node to the name from the child element (as was originally done by Ryan's common.formatFormHubColumnName() function
     function recursiveChildren(node, columns, parent) {
         node.forEach(function (d) {
-            if (d.hasOwnProperty('children'))
-                recursiveChildren(d.children, columns, d.name);
-            else
-                columns.push({'name': (parent+"_"+d.name).toLowerCase(), 'type': (d.type == undefined ? "text" : d.type)});
+            if (d.hasOwnProperty('children') && d.children[0].name != "yes") {
+                // Check to see if this is a multiple choice question.  If it is, add it to our multichoice array.
+                if (d.type == "select one" || d.type == "select all that apply") {
+                    multichoice.push((parent != "base" ? parent+"/" : "")+d.name);
+                    recursiveChildren(d.children, columns, parent+"_"+d.name);
+                } else {
+                    recursiveChildren(d.children, columns, d.name);
+                }
+            } else {
+                // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
+                // Append 'mc' in this case so that we know it is from the multiple choice option.
+                d.name = (d.name == "other" ? d.name+"_mc" : d.name);
+                columns.push({
+                    'name': (parent + "_" + d.name).toLowerCase(),
+                    'type': (d.type == undefined ? "text" : d.type)
+                });
+            }
         });
         return columns;
     }
@@ -185,6 +205,20 @@ Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
     if (!self.surveys[formName]) {
       self.surveys[formName] = {};
     }
+    // compare the data coming in with the multiple choice array.  If it is a question with multiple options for response remove the base field (question) and add fields for each response option.
+    for(var prop1 in data) {
+        for(var key in data[prop1]) {
+            for (var prop2 in self.surveys[formName].multichoice) {
+                if (key == self.surveys[formName].multichoice[prop2]) {
+                    // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
+                    // Append 'mc' in this case so that we know it is from the multiple choice option.
+                    var newname = key + "_" + data[prop1][key] + (data[prop1][key] == "other" ? "_mc" : "");
+                    data[prop1][newname] = 1;
+                    delete data[prop1][key];
+                }
+            }
+        }
+    }
 
     self.surveys[formName].data = data;
 
@@ -192,6 +226,35 @@ Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
 
   });
 
+}
+
+// Find any columns that are in the data fields that don't exist in the metadata and append them to the metacolumns.
+// There is a quick check here to make sure that they are base level entities e.g., "base__" or the formhub_uuid
+Surveys.prototype.mergeDataColumnsAndMetaData = function(cb) {
+    var self = this;
+    var match = false;
+    for(var key in self.surveys) {
+        var survey = self.surveys[key];
+        survey.multiplechoice = [];
+        if (survey && survey.columns && survey.metacolumns) {
+            for(var p in survey.columns) {
+                match = false;
+                for(var m in survey.metacolumns) {
+                    if (survey.metacolumns[m].name.toLowerCase() == survey.columns[p].toLowerCase()) {
+                        match = true;
+                        break;
+                    }
+                }
+                if (!match) {
+                   if(survey.columns[p].indexOf("__") != -1 || survey.columns[p].indexOf("formhub") != -1) {
+                       survey.metacolumns.push({name: survey.columns[p], type: 'text'});
+                   }
+                }
+            }
+        }
+    }
+    //Done
+    cb();
 }
 
 //Add column names to the surveys property.

@@ -107,14 +107,14 @@ PostGresHelper.prototype.addNewColumnsIfNecessary = function(tableName, survey, 
   var _checkColumns = flow.define(
     function (dbColumns) {
 
-      if(survey.columns) {
+      if(survey.metacolumns) {
         var updateColumns = false;
 
-        survey.columns.forEach(function (incomingColumn) {
-          if (dbColumns.indexOf(incomingColumn) == -1) {
+        survey.metacolumns.forEach(function (incomingColumn) {
+          if (dbColumns.indexOf(incomingColumn.name) == -1) {
             //Not found in the DB Column list.  Assume it is a new column.
             updateColumns = true;
-            self.addColumnToTable(tableName, incomingColumn, 'text', this.MULTI());
+            self.addColumnToTable(tableName, incomingColumn.name, 'text', this.MULTI());
           }
         }, this)
 
@@ -215,14 +215,14 @@ PostGresHelper.prototype.createTable = function (tableName, survey, cb) {
   var lowerList = {}; //a lowercase list of field names coming back from formhub.
 
   var sql = "CREATE TABLE " + tableName.toLowerCase() + "( ID  SERIAL PRIMARY KEY, ";
-  survey.columns.forEach(function(field){
+  survey.metacolumns.forEach(function(field){
 
 
-    //Make sure the return field matches one of the whitelisted fields from the original SOQL query, otherwise ignore the property
+    //Make sure the return field matches one of the whitelisted fields from the original SQL query, otherwise ignore the property
     //if (isValidColumn(fields, field) == true) {
       //It's ok.  Let it pass
-      sql += common.escapePostGresColumns([field.toLowerCase()])[0] + ' ' + (survey.types[field] || 'text') + ', ';
-      lowerList[field.toLowerCase()] = true; //keep a lower case version
+      sql += common.escapePostGresColumns(field.name.toLowerCase()) + ' ' + common.mapFormHubTypes2PostgresTypes(field) + ', ';
+      lowerList[field] = true; //keep a lower case version
     //}
 
   });
@@ -294,8 +294,9 @@ PostGresHelper.prototype.insertRows = function(tableName, survey, cb) {
           var cleanVersion = common.formatFormHubColumnName(field);
 
           //if (isValidColumn(survey.columns, cleanVersion) == true) {
-          insertFieldArray.push(common.escapePostGresColumns([cleanVersion.toLocaleLowerCase()])[0]);
-          insertValueArray.push(convertArrayValuesToDelimitedString(row[field], settings.pg.delimiter));
+          insertFieldArray.push(common.escapePostGresColumns(cleanVersion.toLocaleLowerCase()));
+          // insertValueArray.push(row[field]);
+          insertValueArray.push(convertArrayValuesToDelimitedString(row[field], settings.pg.delimiter)); // Old method for adding array.
           //}
         }
 

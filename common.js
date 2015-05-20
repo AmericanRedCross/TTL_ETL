@@ -202,12 +202,23 @@ common.IsNumeric = function (sText) {
 
 
 //Take in an array, spit out an array of escaped columns
-common.escapePostGresColumns = function (items) {
+common.escapePostGresColumns = function (item) {
     //wrap all strings in double quotes
-    return items.map(function (item) {
+    //return items.map(function (item) {
         //remove all quotes then wrap with quotes, just to be sure
         return '"' + item.replace(/"/g, "") + '"';
-    });
+    //});
+}
+
+common.mapFormHubTypes2PostgresTypes = function (field) {
+    var map = {note:'text',numeric:'float',integer:'bigint', calculate:'text'};
+    if (field.name == "meta_instanceid")
+        return "text";
+    if(map.hasOwnProperty(field.type)) {
+        return map[field.type];
+    } else {
+        return 'text';
+    }
 }
 
 /*
@@ -219,7 +230,8 @@ common.formatFormHubColumnName = function(columnName) {
 
     if(pieces.length == 1){
         //Just return the string already.
-        return pieces[0];
+        // prepend 'base' so that we know it is coming from the base of the hierarchy.
+        return "base_"+pieces[0];
     }
     else if(pieces.length >= 2){
         //use the last 2 pieces of the array, since the last one isn't always unique for a given survey.

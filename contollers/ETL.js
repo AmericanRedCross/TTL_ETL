@@ -41,14 +41,15 @@ ETL.prototype.run = flow.define(
     //For each survey, pull down the metadata (columns, data types and multiple choice options, etc.)
     surveys.downloadFormMetadata(this);
   },
+  function() {
+    // Get the column names from the metadata form.js file
+    surveys.addColumnNamesFromMetadata(this);
+  },
   function(err, data) {
 
     //For each survey, pull down the data
     surveys.downloadAllData(this);
 
-  },
-  function() {
-    surveys.addColumnNamesFromMetadata(this);
   },
 
   function() {
@@ -56,6 +57,11 @@ ETL.prototype.run = flow.define(
     //Peel out the column names from each dataset
     surveys.addColumnNames(this);
 
+  },
+
+  function() {
+    // There are some columns that show up in the data that are not in the metadata (e.g. bamboo_dataset_id).
+    surveys.mergeDataColumnsAndMetaData(this);
   },
 
   function() {
