@@ -30,10 +30,12 @@ Surveys.prototype.fetchFormHubFormList = function(cb) {
       cb(err, null)
       return;
     }
-      // only give me two tables back for now.
-    var tmp = {};
-      tmp.Abc = data.Abc;
-      tmp.Core_Shelter_Validation_Tool = data.Core_Shelter_Validation_Tool;
+      // only return two tables for initial development.
+     var tmp = {};
+     // tmp.Abc = data.Abc;
+     //  tmp.Core_Shelter_Validation_Tool = data.Core_Shelter_Validation_Tool;
+      tmp.Core_Shelter_Validation_Tool = data.Enumeration_TTL_Final_31OctUpdates;
+
     data = tmp;
 
     self.surveyList = data;
@@ -164,12 +166,15 @@ Surveys.prototype.addColumnNamesFromMetadata = function(cb){
                     recursiveChildren(d.children, columns, d.name, false);
                 }
             } else {
+                if (d.name == "others")
+                    var x = 1;
                 // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
                 // Append 'mc' in this case so that we know it is from the multiple choice option.
-                d.name = (d.name == "other" ? d.name+"_mc" : d.name);
+                d.name = ((d.name == "other" || d.name == "others") ? d.name+"_mc" : d.name);
+                // Check data type and give 'multi' to the multiple choice responses.  This is mapped to integer in common.mapFormHubTypes2PostgresTypes()
                 d.type = (multi ? "multi" : d.type);
                 columns.push({
-                    'name': (parent + "_" + d.name).toLowerCase(),
+                    'name': (parent + "_" + d.name).toLowerCase().substring(0,63),
                     'type': (d.type == undefined ? "text" : d.type)
                 });
             }
@@ -212,20 +217,20 @@ Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
     for(var prop1 in data) {
         for(var key in data[prop1]) {
             for (var prop2 in self.surveys[formName].multichoice) {
-                if (key == self.surveys[formName].multichoice[prop2]) {
+                if (common.formatFormHubColumnName(key) == common.formatFormHubColumnName(self.surveys[formName].multichoice[prop2])) {
                     // Check to see if we have multiple answer in the same line (multiple choice responses will be delimited with a space
                     if (data[prop1][key].indexOf(" ") != -1) {
                         var multi = data[prop1][key].split(" ");
                         for(var ele in multi) {
                             // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
                             // Append 'mc' in this case so that we know it is from the multiple choice option.
-                            newname = key + "_" + multi[ele] + (multi[ele] == "other" ? "_mc" : "");
-                            data[prop1][newname] = 1;
+                            newname = key + "_" + multi[ele] + ((multi[ele] == "other" || multi[ele] == "others") ? "_mc" : "");
+                            data[prop1][newname.substring(0,63)] = 1;
                             delete data[prop1][key];
                         }
                     } else {
-                        newname = key + "_" + data[prop1][key] + (data[prop1][key] == "other" ? "_mc" : "");
-                        data[prop1][newname] = 1;
+                        newname = key + "_" + data[prop1][key] + ((data[prop1][key] == "other" || data[prop1][key] == "others") ? "_mc" : "");
+                        data[prop1][newname.substring(0,63)] = 1;
                         delete data[prop1][key];
                     }
 

@@ -211,6 +211,7 @@ common.escapePostGresColumns = function (item) {
 }
 
 // Look up the data types from the metadata and map them to postgres data types.
+// Note that "meta_instanceid" is actually a string but the metadata file erroneously calls it "calculate."
 common.mapFormHubTypes2PostgresTypes = function (field) {
     var map = {note:'text',numeric:'float',integer:'bigint', calculate:'double precision', multi:'integer'};
     if (field.name == "meta_instanceid")
