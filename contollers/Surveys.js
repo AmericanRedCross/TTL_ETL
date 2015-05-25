@@ -148,7 +148,7 @@ Surveys.prototype.addColumnNamesFromMetadata = function(cb){
             var columns = [];
             var multichoice = [];
             // Last two columns are for "base class" and "is multiple choice"
-            columns = recursiveChildren(survey.metadata.children, columns, "base", false);
+            columns = recursiveChildren(survey.metadata.children, columns, "", false);
             survey.metacolumns = columns;
             survey.multichoice = multichoice;
         }
@@ -160,24 +160,37 @@ Surveys.prototype.addColumnNamesFromMetadata = function(cb){
             if (d.hasOwnProperty('children') && d.children[0].name != "yes") {
                 // Check to see if this is a multiple choice question.  If it is, add it to our multichoice array.
                 if (d.type == "select one" || d.type == "select all that apply") {
-                    multichoice.push((parent != "base" ? parent+"/" : "")+d.name);
-                    recursiveChildren(d.children, columns, parent+"_"+d.name, true);
+                    multichoice.push((parent != "" ? parent+"/" : "")+d.name);
+                    var n = (parent != "") ? (parent+"_"+ d.name) : d.name;
+                    recursiveChildren(d.children, columns, n, true);
                 } else {
                     recursiveChildren(d.children, columns, d.name, false);
                 }
             } else {
-                if (d.name == "others")
-                    var x = 1;
                 // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
                 // Append 'mc' in this case so that we know it is from the multiple choice option.
                 d.name = ((d.name == "other" || d.name == "others") ? d.name+"_mc" : d.name);
                 // Check data type and give 'multi' to the multiple choice responses.  This is mapped to integer in common.mapFormHubTypes2PostgresTypes()
                 d.type = (multi ? "multi" : d.type);
-                columns.push({
-                    'name': (parent + "_" + d.name).toLowerCase().substring(0,63),
-                    'type': (d.type == undefined ? "text" : d.type)
-                });
+
+                // So apparently there is at least one column name in the medatadata file that has a space in it.
+                // This should not be allowed, but in case it slips through, split on space and do multiple metadata entries
+                if (d.name.indexOf(" ") != -1) {
+                    var aName = d.name.split(" ");
+                    for(var a in aName) {
+                        addColumn(columns, parent, aName[a], d.type);
+                    }
+                } else {
+                    addColumn(columns, parent, d.name, d.type);
+                }
             }
+        });
+        return columns;
+    }
+    function addColumn(columns, parent, name, type) {
+        columns.push({
+            'name': common.stripFrontUnderscore(parent + "_" + name).toLowerCase().substring(0,63),
+            'type': (type == undefined ? "text" : type)
         });
         return columns;
     }
@@ -213,7 +226,10 @@ Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
       self.surveys[formName] = {};
     }
       var newname = null;
-    // compare the data coming in with the multiple choice array.  If it is a question with multiple options for response remove the base field (question) and add fields for each response option.
+      var tmp = null;
+    // compare the data coming in with the multiple choice array.
+    // If it is a question with multiple options for response remove the base field (question) and add fields for each response option.
+    // Give the field a 1 for exists.
     for(var prop1 in data) {
         for(var key in data[prop1]) {
             for (var prop2 in self.surveys[formName].multichoice) {
@@ -225,16 +241,22 @@ Surveys.prototype.fetchFormHubData = function(formName, path, cb) {
                             // This handles the strange issue that multiple choice response 'other' ends up with the same name as the 'other' input text field.
                             // Append 'mc' in this case so that we know it is from the multiple choice option.
                             newname = key + "_" + multi[ele] + ((multi[ele] == "other" || multi[ele] == "others") ? "_mc" : "");
-                            data[prop1][newname.substring(0,63)] = 1;
-                            delete data[prop1][key];
+                            data[prop1][common.formatFormHubColumnName(newname).substring(0,63)] = 1;
                         }
+                        delete data[prop1][key];
                     } else {
                         newname = key + "_" + data[prop1][key] + ((data[prop1][key] == "other" || data[prop1][key] == "others") ? "_mc" : "");
-                        data[prop1][newname.substring(0,63)] = 1;
+                        data[prop1][common.formatFormHubColumnName(newname).substring(0,63)] = 1;
                         delete data[prop1][key];
                     }
 
                 }
+            }
+            // Those pesky columns that start with underscore are annoying.  This makes life simpler.
+            if (key.substring(0,1) == "_") {
+                tmp = common.stripFrontUnderscore(key);
+                data[prop1][tmp] = data[prop1][key];
+                delete data[prop1][key];
             }
         }
     }
@@ -265,7 +287,8 @@ Surveys.prototype.mergeDataColumnsAndMetaData = function(cb) {
                     }
                 }
                 if (!match) {
-                   if(survey.columns[p].indexOf("__") != -1 || survey.columns[p].indexOf("formhub") != -1) {
+                   if(survey.columns[p].length < 18) {
+                       // var t = common.stripFrontUnderscore(survey.columns[p]);
                        survey.metacolumns.push({name: survey.columns[p], type: 'text'});
                    }
                 }

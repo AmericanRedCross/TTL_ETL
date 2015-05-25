@@ -142,6 +142,14 @@ common.respond = function (req, res, args, callback) {
 
 }
 
+common.stripFrontUnderscore = function(col) {
+    if (col.substring(0,1) == "_")
+        return col.substring(1, col.length);
+    else
+        return col;
+}
+
+common.standardColumns = ["formhub_uuid","tags"];
 
 common.executePgQuery = function (query, callback) {
     //Just run the query
@@ -233,7 +241,7 @@ common.formatFormHubColumnName = function(columnName) {
     if(pieces.length == 1){
         //Just return the string already.
         // prepend 'base' so that we know it is coming from the base of the hierarchy.
-        return "base_"+pieces[0];
+        return pieces[0];
     }
     else if(pieces.length >= 2){
         //use the last 2 pieces of the array, since the last one isn't always unique for a given survey.

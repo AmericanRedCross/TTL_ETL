@@ -214,7 +214,7 @@ PostGresHelper.prototype.createTable = function (tableName, survey, cb) {
   //TODO: Get rid of this workaround.
   var lowerList = {}; //a lowercase list of field names coming back from formhub.
 
-  var sql = "CREATE TABLE " + tableName.toLowerCase() + "( ID  SERIAL PRIMARY KEY, ";
+  var sql = "CREATE TABLE " + tableName.toLowerCase() + "( FORMID  SERIAL PRIMARY KEY, ";
   survey.metacolumns.forEach(function(field){
 
 
@@ -272,7 +272,7 @@ PostGresHelper.prototype.insertRows = function(tableName, survey, cb) {
       survey.data.forEach(function (row) {
 
         //Get the _uuid of the record (ALL FormHub surveys (so far) have this field)
-        var _uuid = row['_uuid'];
+        var _uuid = row['uuid'];
 
         var insertStr = "INSERT INTO " + tableName + " ( ";
         var valStr = "VALUES ( ";
@@ -318,7 +318,7 @@ PostGresHelper.prototype.insertRows = function(tableName, survey, cb) {
         //New addition - if survey already exists in DB, then add a check to NOT insert rows if _uuid exists already.
         //Only if there is a _uuid for this record.  Otherwise, just INSERT IT.
         if(survey && survey.exists && survey.exists === true && _uuid){
-          sql += (" WHERE NOT EXISTS (SELECT _uuid from {{table}} where _uuid = '{{uuid}}')").replace('{{table}}', tableName).replace('{{uuid}}', _uuid);
+          sql += (" WHERE NOT EXISTS (SELECT uuid from {{table}} where uuid = '{{uuid}}')").replace('{{table}}', tableName).replace('{{uuid}}', _uuid);
         }else{
           sql += ")"; //Value string ends with a parenthesis ONLY when we're INSERTing a new row WITHOUT the _uuid check.
         }
@@ -391,7 +391,7 @@ PostGresHelper.prototype.addGeomColumn = function(tableName, cb) {
 PostGresHelper.prototype.fillGeomColumn = function(tableName, cb) {
 
   var sql = "UPDATE " + tableName +
-  " SET geom = CASE WHEN (trim(both ' ' from _geolocation) = ',' OR _geolocation IS NULL) THEN NULL ELSE ST_GeomFromText('POINT(' || split_part(_geolocation, ',', 2) || ' ' || split_part(_geolocation, ',', 1) || ')', 4326) END;";
+  " SET geom = CASE WHEN (trim(both ' ' from geolocation) = ',' OR geolocation IS NULL) THEN NULL ELSE ST_GeomFromText('POINT(' || split_part(geolocation, ',', 2) || ' ' || split_part(geolocation, ',', 1) || ')', 4326) END;";
 
   //Send it in
   this.query(sql, cb); //MULTI means to wait until all calls finish, and then proceed to next function in flow

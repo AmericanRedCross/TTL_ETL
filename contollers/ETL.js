@@ -102,7 +102,7 @@ ETL.prototype.run = flow.define(
 
   },
   function(){
-    //Add geom columns, but only if _geolocation property exists for a given survey
+    //Add geom columns, but only if geolocation property exists for a given survey
     var self = this;
 
     for(var key in surveys.surveys) {
@@ -110,7 +110,7 @@ ETL.prototype.run = flow.define(
 
       if(survey.columns && survey.data && key.indexOf("test") == -1){ //Don't use surveys with 'test' in the form name.
 
-        if (survey.columns.indexOf("_geolocation") > -1) {
+        if (survey.columns.indexOf("geolocation") > -1) {
           pghelper.addGeomColumn(key, self.MULTI());
         }
 
@@ -122,7 +122,7 @@ ETL.prototype.run = flow.define(
 
   },
   function(){
-    //Fill geom columns, but only if _geolocation property exists for a given survey
+    //Fill geom columns, but only if geolocation property exists for a given survey
     var self = this;
 
     for(var key in surveys.surveys) {
@@ -130,7 +130,7 @@ ETL.prototype.run = flow.define(
 
       if(survey.columns && survey.data && key.indexOf("test") == -1){ //Don't use surveys with 'test' in the form name.
 
-        if(survey.columns.indexOf("_geolocation") > -1){
+        if(survey.columns.indexOf("geolocation") > -1){
             //Added Geom column. Fill it with geom data.
             pghelper.fillGeomColumn(key, self.MULTI());
         }
