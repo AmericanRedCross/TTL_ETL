@@ -36,7 +36,7 @@ Surveys.prototype.fetchFormHubFormList = function(cb) {
      //  tmp.Core_Shelter_Validation_Tool = data.Core_Shelter_Validation_Tool;
       tmp.Core_Shelter_Validation_Tool = data.Enumeration_TTL_Final_31OctUpdates;
 
-    data = tmp;
+    //data = tmp;
 
     self.surveyList = data;
     cb(null, data);
