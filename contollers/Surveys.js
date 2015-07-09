@@ -52,7 +52,8 @@ Surveys.prototype.downloadAllData= function(cb) {
 
           if (typeof listItem.url !== 'undefined' && listItem.url !== null) {
             // Ona format
-            self.fetchFormHubData(listItem.title, listItem.url, this.MULTI());
+            // - is not allowed in postgres table name
+            self.fetchFormHubData(listItem.id_string.replace(/-/g, '_'), listItem.url, this.MULTI());
           } else {
             // Formhub format
             self.fetchFormHubData(key, listItem, this.MULTI());
