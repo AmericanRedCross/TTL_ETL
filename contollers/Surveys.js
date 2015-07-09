@@ -48,10 +48,15 @@ Surveys.prototype.downloadAllData= function(cb) {
     function(){
 
         for(var key in self.surveyList) {
+          var listItem = self.surveyList[key];
 
-          //Download this file from FormHub.
-          self.fetchFormHubData(key, self.surveyList[key], this.MULTI());
-
+          if (typeof listItem.url !== 'undefined' && listItem.url !== null) {
+            // Ona format
+            self.fetchFormHubData(listItem.title, listItem.url, this.MULTI());
+          } else {
+            // Formhub format
+            self.fetchFormHubData(key, listItem, this.MULTI());
+          }
         }
 
     },
