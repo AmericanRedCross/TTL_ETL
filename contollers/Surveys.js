@@ -56,7 +56,8 @@ Surveys.prototype.downloadAllData= function(cb) {
             self.fetchFormHubData(listItem.id_string.replace(/-/g, '_'), listItem.url, this.MULTI());
           } else {
             // Formhub format
-            self.fetchFormHubData(key, listItem, this.MULTI());
+            // - is not allowed in postgres table name
+            self.fetchFormHubData(key.replace(/-/g, '_'), listItem, this.MULTI());
           }
         }
 
