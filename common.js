@@ -4,7 +4,6 @@ var pg = require('pg'),
     request = require("request"),
     settings = require("./settings/settings"),
     fs = require("fs"),
-    shortid = require("shortid"),
     _ = require("underscore-node");
 
 var common = {};

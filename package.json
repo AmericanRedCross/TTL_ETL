@@ -1,12 +1,10 @@
 {
   "name": "TTL_ETL",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "An ETL to fetch datatables from FormHub API and insert them into a PostGreSQL Instance.",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "npm test",
-    "watch": "watchify -v -d public/js/core.js -o public/lib/ttl_client.js",
-    "build": "browserify -d public/js/core.js -o public/lib/ttl_client.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -15,35 +13,21 @@
   "keywords": [
     "PostGreSQL",
     "ETL",
-    "FormHub",
-    "SpatialDev"
+    "FormHub"
   ],
-  "author": "Ryan Whitley",
+  "author": "Ryan Whitley, Dan Joseph",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/AmericanRedCross/TTL_ETL/issues"
   },
   "homepage": "https://github.com/AmericanRedCross/TTL_ETL",
   "dependencies": {
-    "aws-sdk": "2.1.4",
-    "body-parser": "^1.9.2",
-    "browserify": "~5.9.1",
-    "cors": "^2.5.2",
-    "errorhandler": "^1.2.2",
-    "express": "^4.10.2",
+    "aws-sdk": "^2.3.18",
+    "cron": "^1.1.0",
     "flow": "^0.2.3",
-    "fs": "0.0.2",
-    "jade": "^1.7.0",
-    "method-override": "^2.3.0",
-    "moment": "^2.9.0",
-    "multer": "^0.1.6",
-    "path": "^0.4.9",
-    "pg": "4.1.0",
-    "request": "2.51.0",
-    "serve-favicon": "^2.1.6",
-    "shortid": "2.0.1",
-    "socket.io": "^1.2.1",
-    "underscore-node": "0.1.2",
-    "watchify": "1.0.1"
+    "moment": "^2.13.0",
+    "pg": "^5.0.0",
+    "request": "^2.72.0",
+    "underscore-node": "^0.1.2"
   }
 }
