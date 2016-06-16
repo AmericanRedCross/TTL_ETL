@@ -418,6 +418,10 @@ function sanitize(val) {
 }
 
 function convertArrayValuesToDelimitedString(val, delimiter){
+  // sometimes the values in fields might be null
+  if (typeof val === 'undefined' || val === null) {
+    return sanitize("");
+  }
   //If value is an array, then concat the fields using a delimiter and return that.
   if(val.constructor === Array){
     var mapped = sanitize(val.map(function(item){

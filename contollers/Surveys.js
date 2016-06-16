@@ -48,10 +48,17 @@ Surveys.prototype.downloadAllData= function(cb) {
     function(){
 
         for(var key in self.surveyList) {
+          var listItem = self.surveyList[key];
 
-          //Download this file from FormHub.
-          self.fetchFormHubData(key, self.surveyList[key], this.MULTI());
-
+          if (typeof listItem.url !== 'undefined' && listItem.url !== null) {
+            // Ona format
+            // - is not allowed in postgres table name
+            self.fetchFormHubData(listItem.id_string.replace(/-/g, '_'), listItem.url, this.MULTI());
+          } else {
+            // Formhub format
+            // - is not allowed in postgres table name
+            self.fetchFormHubData(key.replace(/-/g, '_'), listItem, this.MULTI());
+          }
         }
 
     },

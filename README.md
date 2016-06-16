@@ -23,12 +23,16 @@ Screenshot of Data loaded into QGIS
 7. Add your Amazon Web Service Credentials: Create a credentials file at ~/.aws/credentials on Mac/Linux or C:\Users\USERNAME\.aws\credentials on Windows
 8. Inside of the file from #7, add
 
-    aws_access_key_id = your_access_key
-
-    aws_secret_access_key = your_secret_key
+    ```
+    [default]
+    aws_access_key_id = YOUR_ACCESS_KEY_ID
+    aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
+    ```
 
 9. run the app: `node index.js`
 10. Open http://yourIP:3004 to see the Angular UI.
+
+Note that if your S3 upload fails, double check the formatting of your credentials file. It must be formatted exactly how it is shown. No extra spaces, and you need the `[default]`.
 
 ##Background
 
