@@ -12,7 +12,7 @@ This project is a Node.js application (The ETL) plus a lightweight Angular.js cl
 Screenshot of Data loaded into QGIS
 <img src="docs/images/q.png" width="600" height="400"/>
 
-##Quick(ish) Setup
+## Quick(ish) Setup
 
 1. Install Node/NPM
 2. Clone this repository
@@ -30,13 +30,13 @@ Screenshot of Data loaded into QGIS
 9. run the app: `node index.js`
 10. Open http://yourIP:3004 to see the Angular UI.
 
-##Background
+## Background
 
 This utility is meant to help automate the extraction of tabular/spatial data from a FormHub API Instance and load it into a Postgres database.
 Although the FormHub API has an interface that allows for extraction of data into XML and CSV formats, it can become tedious and repetitive if this process needs to be done daily.
 This utility can be scheduled to run on a periodic basis to automatically extract data and load it into a postgres DB.
 
-##Components
+## Components
 
 The 3 main components of the ETL are described in the sections below:
 
@@ -44,12 +44,12 @@ The 3 main components of the ETL are described in the sections below:
 2. [DB Backup](#DBBackup)
 3. [Ship DB to S3](#ShipToS3)
 
-####TTL API Endpoint
+#### TTL API Endpoint
 To run all 3 sequentailly:
 
     http://localhost:3004/runall
 
-###<a name="FormHubSync"></a>FormHubSync
+### <a name="FormHubSync"></a>FormHubSync
 
 TTL API Endpoint to run this individual component:
 
@@ -91,7 +91,7 @@ This part of the ETL is where most of the work happens.  This piece consists of 
 
 
 
-###<a name="DBBackup"></a>DBBackup
+### <a name="DBBackup"></a>DBBackup
 
 TTL API Endpoint to run this individual component:
 
@@ -109,7 +109,7 @@ This uses pg_dump with the verbose option to back up the ttl database and write 
 
 
 
-###<a name="ShipToS3"></a>ShipToS3
+### <a name="ShipToS3"></a>ShipToS3
 
 TTL API Endpoint to run this individual component:
 
@@ -120,7 +120,7 @@ If one or more matching files are found, then it checks to see which of those fi
 It then zips this file and sends it to an Amazon S3 Bucket.
 
 
-##Angular User Interface
+## Angular User Interface
 
 Screenshot of Angular UI
 <img src="docs/images/ui.png" width="600" height="400"/>
@@ -156,7 +156,7 @@ To add/modify the pre-defined reports, see the file located at:
 Note: This file is referenced by both the server side Node.js process AND the client side Angular UI, but lives in the client side folder structure.
 
 
-##Environment Setup for Development
+## Environment Setup for Development
 
 If you intend to develop/alter this application, note that the Angular.js UI component (located in /public folder) uses [watchify](https://github.com/substack/watchify) and browserify to monitor and compress the client side javascript (also lets you use the 'require' style of javascript references).
 Watchify and Browserify should be already installed when `npm install` is run in the root folder (if you followed the Quick Setup steps at the top of this document).
